@@ -543,8 +543,8 @@ export default function Scoreboard() {
                           ease: "easeInOut"
                         }}
                       >
-                        <div className={`text-xl font-bold`}>
-                          {score.score}
+                        <div className={`text-lg sm:text-xl font-bold`}>
+                          {score.score.toLocaleString()}
                         </div>
                       </motion.div>
 

@@ -229,7 +229,7 @@ export default function Game() {
             <div className="flex items-center gap-1 sm:gap-2 bg-white/10 rounded-lg px-2 sm:px-4 py-1 sm:py-2">
               <Zap className="text-yellow-400" size={16} />
               <span className="text-white font-bold text-lg sm:text-xl">
-                {isLoadingScore ? '...' : score}
+                {isLoadingScore ? '...' : score.toLocaleString()}
               </span>
             </div>
             <button
@@ -249,8 +249,8 @@ export default function Game() {
         <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 bg-black/50 text-white text-xs p-2 rounded">
           <div className="hidden sm:block">Targets: {targets.length}/20</div>
           <div className="sm:hidden">T: {targets.length}/20</div>
-          <div className="hidden sm:block">Score: {score}</div>
-          <div className="sm:hidden">S: {score}</div>
+          <div className="hidden sm:block">Score: {score.toLocaleString()}</div>
+          <div className="sm:hidden">S: {score.toLocaleString()}</div>
           <div className="hidden sm:block">Auto-remove: ON</div>
           <div className="hidden sm:block">Generate: 1s</div>
           {targets.length > 2 && (
