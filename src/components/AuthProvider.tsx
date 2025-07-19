@@ -89,6 +89,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    async function checkUserExists() {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      if (!cancelled && (error || !data)) {
+        // User not found, sign out
+        await signOut();
+      }
+    }
+
+    const interval = setInterval(checkUserExists, 5000);
+    checkUserExists();
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{
       user,
