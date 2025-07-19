@@ -126,13 +126,14 @@ export default function Game() {
     const newScore = score + target.points
     setScore(newScore)
 
-    // Update database
+    // Update database with current timestamp
     try {
       await supabase
         .from('scores')
         .upsert({
           user_id: user.id,
-          score: newScore
+          score: newScore,
+          updated_at: new Date().toISOString() // Update timestamp when user clicks
         }, {
           onConflict: 'user_id'
         })
@@ -187,42 +188,44 @@ export default function Game() {
   return (
     <div className="relative w-full h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-black/20 backdrop-blur-sm border-b border-white/10 p-4">
+      <div className="absolute top-0 left-0 right-0 z-10 bg-black/20 backdrop-blur-sm border-b border-white/10 p-2 sm:p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {user.user_metadata?.avatar_url ? (
               <Image
                 src={user.user_metadata.avatar_url}
                 alt={user.user_metadata?.name || 'User'}
-                width={40}
-                height={40}
-                className="rounded-full"
+                width={32}
+                height={32}
+                className="rounded-full sm:w-10 sm:h-10"
               />
             ) : (
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base">
                 {user.user_metadata?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             )}
-            <div>
-              <h2 className="text-white font-semibold">
+            <div className="min-w-0">
+              <h2 className="text-white font-semibold text-sm sm:text-base truncate">
                 {user.user_metadata?.full_name || user.user_metadata?.name || 'Player'}
               </h2>
+              <p className="text-white/60 text-xs sm:text-sm hidden sm:block">แย่งกันกด targets!</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
-              <Zap className="text-yellow-400" size={20} />
-              <span className="text-white font-bold text-xl">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-1 sm:gap-2 bg-white/10 rounded-lg px-2 sm:px-4 py-1 sm:py-2">
+              <Zap className="text-yellow-400" size={16} />
+              <span className="text-white font-bold text-lg sm:text-xl">
                 {isLoadingScore ? '...' : score}
               </span>
             </div>
             <button
               onClick={signOut}
-              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1 sm:gap-2 bg-red-500 hover:bg-red-600 text-white px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-colors cursor-pointer text-xs sm:text-sm"
             >
-              <LogOut size={16} />
-              ออกจากระบบ
+              <LogOut size={14} className="sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">ออกจากระบบ</span>
+              <span className="sm:hidden">ออก</span>
             </button>
           </div>
         </div>
@@ -230,11 +233,13 @@ export default function Game() {
 
       {/* Debug Info */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="absolute top-4 right-4 z-20 bg-black/50 text-white text-xs p-2 rounded">
-          <div>Targets: {targets.length}/20</div>
-          <div>Score: {score}</div>
-          <div>Auto-remove: ON</div>
-          <div>Generate: 1s</div>
+        <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 bg-black/50 text-white text-xs p-2 rounded">
+          <div className="hidden sm:block">Targets: {targets.length}/20</div>
+          <div className="sm:hidden">T: {targets.length}/20</div>
+          <div className="hidden sm:block">Score: {score}</div>
+          <div className="sm:hidden">S: {score}</div>
+          <div className="hidden sm:block">Auto-remove: ON</div>
+          <div className="hidden sm:block">Generate: 1s</div>
           {targets.length > 2 && (
             <button 
               onClick={() => {
@@ -243,14 +248,15 @@ export default function Game() {
               }}
               className="mt-2 bg-red-500 text-white px-2 py-1 rounded text-xs"
             >
-              Clear All Targets
+              <span className="hidden sm:inline">Clear All Targets</span>
+              <span className="sm:hidden">Clear</span>
             </button>
           )}
         </div>
       )}
 
       {/* Game Area */}
-      <div className="w-full h-full pt-20">
+      <div className="w-full h-full pt-16 sm:pt-20">
         <AnimatePresence>
           {targets.map((target) => (
             <motion.div

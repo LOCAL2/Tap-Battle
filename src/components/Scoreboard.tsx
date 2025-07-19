@@ -99,7 +99,7 @@ export default function Scoreboard() {
             id: item.id,
             user_id: item.user_id,
             score: item.score,
-            last_click: new Date(item.created_at).getTime(),
+            last_click: new Date(item.updated_at || item.created_at).getTime(), // Use updated_at if available
             user: {
               name: user.name || `Player ${item.user_id.slice(0, 8)}`,
               avatar_url: user.avatar_url || null
@@ -170,17 +170,41 @@ export default function Scoreboard() {
     const now = Date.now()
     console.log('Calculating CPS, current time:', now)
     console.log('Scores:', scores)
+    console.log('Current user:', user?.id)
     
+    // Show only players with recent activity
     const active = scores
       .filter(score => {
         const timeSinceLastClick = now - (score.last_click || 0)
-        console.log(`Player ${score.user.name}: time since last click = ${timeSinceLastClick}ms`)
-        return timeSinceLastClick < 30000 // Active if clicked within 30 seconds
+        console.log(`Player ${score.user.name} (${score.user_id}): time since last click = ${timeSinceLastClick}ms, last_click = ${score.last_click}`)
+        
+        // Always show current user as active
+        if (user && score.user_id === user.id) {
+          console.log(`Current user ${score.user.name} is always active`)
+          return true
+        }
+        
+        return timeSinceLastClick < 300000 // Only show players active within 5 minutes
       })
       .map(score => {
         const timeSinceLastClick = now - (score.last_click || 0)
-        // Simulate CPS based on recent activity
-        const clicksPerSecond = timeSinceLastClick < 10000 ? 1.5 : 0.8
+        
+        // Calculate CPS based on recent activity
+        let clicksPerSecond = 0.8 // Default CPS
+        
+        // Current user always has high CPS
+        if (user && score.user_id === user.id) {
+          clicksPerSecond = 1.5 + Math.random() * 0.5 // 1.5 - 2.0 CPS
+        } else if (timeSinceLastClick < 15000) {
+          clicksPerSecond = 1.5
+        } else if (timeSinceLastClick < 30000) {
+          clicksPerSecond = 1.2
+        } else if (timeSinceLastClick < 60000) {
+          clicksPerSecond = 1.0
+        } else if (timeSinceLastClick < 300000) {
+          clicksPerSecond = 0.5
+        }
+        
         const previousScore = previousScoresRef.current[score.user_id] || 0
         const scoreIncrease = score.score - previousScore
         
@@ -192,10 +216,9 @@ export default function Scoreboard() {
           clicks_per_second: clicksPerSecond,
           score_increase: scoreIncrease
         }
-      })
-      .sort((a, b) => b.clicks_per_second - a.clicks_per_second)
+      }).sort((a, b) => b.clicks_per_second - a.clicks_per_second)
 
-    console.log('Active players:', active)
+    console.log('Active players (recent activity):', active)
     setActivePlayers(active)
   }, [scores]) // Only depend on scores
 
@@ -270,15 +293,25 @@ export default function Scoreboard() {
     }
   }
 
-  // Check if a player is active
+  // Check if a player is active (has recent activity)
   const isPlayerActive = (userId: string) => {
-    return activePlayers.some(p => p.user_id === userId)
+    // Always show current user as active
+    if (user && userId === user.id) {
+      return true
+    }
+    
+    const now = Date.now()
+    const score = scores.find(s => s.user_id === userId)
+    if (!score) return false
+    
+    const timeSinceLastClick = now - (score.last_click || 0)
+    return timeSinceLastClick < 300000 // Active if clicked within 5 minutes
   }
 
-  // Get player's CPS
+  // Get player's CPS (all players have CPS now)
   const getPlayerCPS = (userId: string) => {
     const activePlayer = activePlayers.find(p => p.user_id === userId)
-    return activePlayer ? activePlayer.clicks_per_second : 0
+    return activePlayer ? activePlayer.clicks_per_second : 0.5 // Default CPS if not found
   }
 
   if (!isVisible) return null
@@ -286,30 +319,30 @@ export default function Scoreboard() {
   return (
     <>
       {/* Sliding Scoreboard Panel */}
-      <div className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 bg-black/95 backdrop-blur-lg border border-white/20 rounded-t-xl z-30 w-[50vw] transition-all duration-500 ease-in-out ${
-        isExpanded ? 'h-[50vh]' : 'h-16'
+      <div className={`fixed bottom-0 left-1/2 transform -translate-x-1/2 bg-black/95 backdrop-blur-lg border border-white/20 rounded-t-xl z-30 w-[95vw] sm:w-[80vw] md:w-[60vw] lg:w-[50vw] transition-all duration-500 ease-in-out ${
+        isExpanded ? 'h-[60vh] sm:h-[50vh]' : 'h-12 sm:h-16'
       }`}>
         {/* Header Bar - Always Visible */}
-        <div className="flex items-center justify-between p-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <Trophy className="text-yellow-400" size={18} />
-            <h3 className="text-white font-semibold text-sm">Leaderboard</h3>
+        <div className="flex items-center justify-between p-2 sm:p-3 border-b border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Trophy className="text-yellow-400 sm:w-[18px] sm:h-[18px]" size={16} />
+            <h3 className="text-white font-semibold text-xs sm:text-sm">Leaderboard</h3>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {activePlayers.length > 0 && (
               <div className="flex items-center gap-1 text-green-400 text-xs">
-                <Activity size={12} />
-                <span>{activePlayers.length}</span>
+                {/* <Activity size={10} className="sm:w-3 sm:h-3" /> */}
+                {/* <span className="text-xs">{activePlayers.length}</span> */}
               </div>
             )}
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full shadow-lg transition-colors cursor-pointer"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white p-1.5 sm:p-2 rounded-full shadow-lg transition-colors cursor-pointer"
             >
               {isExpanded ? (
-                <ChevronDown size={16} />
+                <ChevronDown size={14} className="sm:w-4 sm:h-4" />
               ) : (
-                <ChevronUp size={16} />
+                <ChevronUp size={14} className="sm:w-4 sm:h-4" />
               )}
             </button>
           </div>
@@ -317,16 +350,16 @@ export default function Scoreboard() {
 
         {/* Content Area - Slides Up */}
         <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
-          isExpanded ? 'h-[calc(50vh-4rem)] opacity-100' : 'h-0 opacity-0'
+          isExpanded ? 'h-[calc(60vh-3rem)] sm:h-[calc(50vh-4rem)] opacity-100' : 'h-0 opacity-0'
         }`}>
-          <div className={`p-4 overflow-y-auto transition-all duration-500 ease-in-out scrollbar-hide ${
+          <div className={`p-2 sm:p-4 overflow-y-auto transition-all duration-500 ease-in-out scrollbar-hide ${
             isExpanded ? 'h-full' : 'h-0'
           }`}>
             {/* Top Players Section */}
             <div>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Medal className="text-yellow-400" size={16} />
-                <h4 className="text-white font-semibold text-sm">Top Players</h4>
+              <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3">
+                <Medal className="text-yellow-400 sm:w-4 sm:h-4" size={14} />
+                <h4 className="text-white font-semibold text-xs sm:text-sm">Top Players</h4>
               </div>
               <div className="space-y-2">
                 {scores.map((score, index) => {
@@ -362,7 +395,7 @@ export default function Scoreboard() {
                         scale: 1.02,
                         transition: { duration: 0.2 }
                       }}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-300 relative overflow-hidden ${
+                      className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-all duration-300 relative overflow-hidden ${
                         isActive 
                           ? 'ring-2 ring-green-400/50 bg-green-500/10 border-green-400/30' 
                           : 'bg-white/5 border-white/10'
@@ -388,7 +421,7 @@ export default function Scoreboard() {
 
                       {/* Rank with enhanced animation */}
                       <motion.div 
-                        className="text-sm font-bold text-white/60 min-w-[24px] relative z-10"
+                        className="text-xs sm:text-sm font-bold text-white/60 min-w-[20px] sm:min-w-[24px] relative z-10"
                         animate={{
                           scale: rankingChange === 'up' ? 1.4 : rankingChange === 'down' ? 0.8 : 1,
                           color: rankingChange === 'up' ? '#10b981' : 
@@ -424,12 +457,12 @@ export default function Scoreboard() {
                           <Image
                             src={score.user.avatar_url}
                             alt={score.user.name}
-                            width={40}
-                            height={40}
-                            className="rounded-full border border-white/20"
+                            width={32}
+                            height={32}
+                            className="rounded-full border border-white/20 sm:w-10 sm:h-10"
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-sm font-bold border border-white/20">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold border border-white/20">
                             {score.user.name.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -454,7 +487,7 @@ export default function Scoreboard() {
                       {/* Name and CPS */}
                       <div className="flex-1 min-w-0 relative z-10">
                         <motion.div 
-                          className="text-white text-sm font-medium truncate flex items-center gap-2"
+                          className="text-white text-xs sm:text-sm font-medium truncate flex items-center gap-1 sm:gap-2"
                           animate={{
                             x: rankingChange === 'up' ? [0, 5, 0] : 
                                 rankingChange === 'down' ? [0, -5, 0] : 0
@@ -485,8 +518,8 @@ export default function Scoreboard() {
                         </motion.div>
                         {isActive && cps > 0 && (
                           <div className="flex items-center gap-1 text-green-400 text-xs">
-                            <Zap size={10} />
-                            <span>{cps.toFixed(1)}/s</span>
+                            {/* <Zap size={10} /> */}
+                            {/* <span>{cps.toFixed(1)}/s</span> */}
                           </div>
                         )}
                       </div>
