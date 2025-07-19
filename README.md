@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tap Battle - เกมกดรูปภาพ
 
-## Getting Started
+เกมกดรูปภาพที่กลางจอแบบ realtime ที่ผู้เล่นสามารถแข่งขันกันได้ โดยต้อง login ด้วย Discord หรือ Google ก่อน
 
-First, run the development server:
+## ฟีเจอร์หลัก
 
+- 🔐 **ระบบ Authentication** - Login ด้วย Discord และ Google
+- 🎯 **เกมกดรูปภาพ** - รูปภาพปรากฏที่กลางจอแบบสุ่ม
+- 📊 **Realtime Scoreboard** - แสดงคะแนนผู้เล่นแบบ realtime
+- ⚡ **อัปเดตทุก 100ms** - ข้อมูลอัปเดตแบบ realtime
+- 🎨 **UI สวยงาม** - ใช้ Tailwind CSS และ Framer Motion
+- 📱 **Responsive Design** - รองรับทุกขนาดหน้าจอ
+
+## การติดตั้ง
+
+1. Clone โปรเจค
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd tapbattle_auth
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. ติดตั้ง dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. ตั้งค่า Supabase และ Environment Variables (ดูรายละเอียดใน [SETUP.md](./SETUP.md))
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. รันโปรเจค
+```bash
+npm run dev
+```
 
-## Learn More
+## เทคโนโลยีที่ใช้
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 15** - React Framework
+- **TypeScript** - Type Safety
+- **Tailwind CSS** - Styling
+- **Supabase** - Database และ Authentication
+- **Framer Motion** - Animations
+- **Lucide React** - Icons
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## การเล่นเกม
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. เข้าสู่ระบบด้วย Discord หรือ Google
+2. รูปภาพวงกลมจะปรากฏที่กลางจอแบบสุ่ม
+3. กดที่วงกลมให้เร็วที่สุดเพื่อได้คะแนน
+4. ดูคะแนนใน Scoreboard ด้านล่าง
+5. แข่งขันกับผู้เล่นอื่นแบบ realtime
 
-## Deploy on Vercel
+## โครงสร้างโปรเจค
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/
+│   ├── game/
+│   │   └── page.tsx          # หน้าเกม
+│   ├── layout.tsx            # Layout หลัก
+│   └── page.tsx              # หน้าแรก (Login)
+├── components/
+│   ├── AuthProvider.tsx      # Context สำหรับ authentication
+│   ├── Game.tsx              # Component เกมหลัก
+│   ├── LoginPage.tsx         # หน้า Login
+│   └── Scoreboard.tsx        # Scoreboard แบบ realtime
+└── lib/
+    └── supabase.ts           # Supabase client configuration
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## การตั้งค่า
+
+ดูรายละเอียดการตั้งค่าทั้งหมดใน [SETUP.md](./SETUP.md)
+
+## License
+
+MIT
