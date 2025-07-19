@@ -91,28 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
-    let cancelled = false;
-
-    async function checkUserExists() {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-      if (!cancelled && (error || !data)) {
-        // User not found, sign out
-        await signOut();
-      }
-    }
-
-    const interval = setInterval(checkUserExists, 5000);
-    checkUserExists();
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
+    const { id, user_metadata } = user;
+    const name = user_metadata?.full_name || user_metadata?.name || null;
+    const avatar_url = user_metadata?.avatar_url || null;
+    if (!name) return;
+    supabase.from('users').upsert({ id, name, avatar_url });
   }, [user]);
 
   return (
