@@ -179,6 +179,16 @@ export default function Game() {
     }
   }, [user, generateTarget])
 
+  useEffect(() => {
+    if (!user) return;
+    const { id, user_metadata } = user;
+    const name = user_metadata?.full_name || user_metadata?.name || null;
+    if (!name) return;
+
+    // sync name to users table
+    supabase.from('users').upsert({ id, name });
+  }, [user]);
+
   if (!user) {
     return null
   }
