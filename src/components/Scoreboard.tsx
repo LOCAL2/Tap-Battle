@@ -45,6 +45,7 @@ export default function Scoreboard() {
   // Use refs to track previous values without causing re-renders
   const previousScoresRef = useRef<{[key: string]: number}>({})
   const previousRankingsRef = useRef<{[key: string]: number}>({})
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchScores = useCallback(async () => {
     try {
@@ -151,8 +152,7 @@ export default function Scoreboard() {
           const newString = JSON.stringify(formattedScores.map(s => ({ user_id: s.user_id, score: s.score })))
           
           if (prevString !== newString) {
-            console.log('Scores updated:', formattedScores)
-            console.log('Ranking changes:', newRankingChanges)
+            console.log('Scores updated:', formattedScores.length, 'players')
             return formattedScores
           }
           return prevScores
@@ -168,23 +168,18 @@ export default function Scoreboard() {
 
   const calculateClicksPerSecond = useCallback(() => {
     const now = Date.now()
-    console.log('Calculating CPS, current time:', now)
-    console.log('Scores:', scores)
-    console.log('Current user:', user?.id)
     
     // Show only players with recent activity
     const active = scores
       .filter(score => {
         const timeSinceLastClick = now - (score.last_click || 0)
-        console.log(`Player ${score.user.name} (${score.user_id}): time since last click = ${timeSinceLastClick}ms, last_click = ${score.last_click}`)
         
         // Always show current user as active
         if (user && score.user_id === user.id) {
-          console.log(`Current user ${score.user.name} is always active`)
           return true
         }
         
-        return timeSinceLastClick < 300000 // Only show players active within 5 minutes
+        return timeSinceLastClick < 10000 // Only show players active within 10 seconds
       })
       .map(score => {
         const timeSinceLastClick = now - (score.last_click || 0)
@@ -218,7 +213,6 @@ export default function Scoreboard() {
         }
       }).sort((a, b) => b.clicks_per_second - a.clicks_per_second)
 
-    console.log('Active players (recent activity):', active)
     setActivePlayers(active)
   }, [scores]) // Only depend on scores
 
@@ -237,34 +231,34 @@ export default function Scoreboard() {
           table: 'scores'
         },
         (payload) => {
-          console.log('Scoreboard realtime update:', {
-            eventType: payload.eventType,
-            table: payload.table,
-            schema: payload.schema,
-            new: payload.new,
-            old: payload.old
-          })
-          // Fetch updated scores immediately
-          fetchScores()
+          // Debounce fetch to avoid too many requests
+          if (fetchTimeoutRef.current) {
+            clearTimeout(fetchTimeoutRef.current)
+          }
+          fetchTimeoutRef.current = setTimeout(() => {
+            fetchScores()
+          }, 500) // Wait 500ms before fetching
         }
       )
       .subscribe()
 
-    // Set up interval to fetch scores every 2 seconds (less frequent)
+    // Set up interval to fetch scores every 500ms
     const interval = setInterval(() => {
       fetchScores()
-    }, 2000)
+    }, 500)
 
-    // Set up interval to calculate clicks per second every 5 seconds
+    // Set up interval to calculate clicks per second every 500ms
     const cpsInterval = setInterval(() => {
       calculateClicksPerSecond()
-    }, 5000)
+    }, 500)
 
     return () => {
-      console.log('Cleaning up scoreboard subscriptions')
       supabase.removeChannel(channel)
       clearInterval(interval)
       clearInterval(cpsInterval)
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current)
+      }
     }
   }, [fetchScores, calculateClicksPerSecond])
 
@@ -305,7 +299,7 @@ export default function Scoreboard() {
     if (!score) return false
     
     const timeSinceLastClick = now - (score.last_click || 0)
-    return timeSinceLastClick < 300000 // Active if clicked within 5 minutes
+    return timeSinceLastClick < 10000 // Active if clicked within 10 seconds
   }
 
   // Get player's CPS (all players have CPS now)
