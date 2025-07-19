@@ -13,13 +13,11 @@ CREATE TABLE users (
   created_at timestamptz DEFAULT now()
 );
 
--- สร้างตาราง scores
+-- สร้างตาราง scores - ใช้ user_id เป็น primary key แทน serial id
 CREATE TABLE scores (
-  id serial PRIMARY KEY,
-  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  user_id uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   score integer NOT NULL DEFAULT 0,
-  updated_at timestamptz DEFAULT now(),
-  UNIQUE(user_id)
+  updated_at timestamptz DEFAULT now()
 );
 
 -- Trigger: อัปเดต updated_at อัตโนมัติเมื่อมีการเปลี่ยนแปลงคะแนน

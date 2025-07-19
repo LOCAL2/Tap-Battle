@@ -41,8 +41,21 @@ export default function Game() {
         .single()
 
       if (error) {
-        console.error('Error loading user score:', error)
-        setScore(0)
+        // If no record found, create one with score 0
+        if (error.code === 'PGRST116') {
+          console.log('No score record found, creating new one')
+          const { error: insertError } = await supabase
+            .from('scores')
+            .insert({ user_id: user.id, score: 0 })
+          
+          if (insertError) {
+            console.error('Error creating score record:', insertError)
+          }
+          setScore(0)
+        } else {
+          console.error('Error loading user score:', error)
+          setScore(0)
+        }
       } else {
         console.log('Loaded score data:', scoreData)
         setScore(scoreData.score || 0)
@@ -133,8 +146,6 @@ export default function Game() {
           user_id: user.id,
           score: newScore
           // updated_at จะถูกอัพเดทอัตโนมัติโดย trigger
-        }, {
-          onConflict: 'user_id'
         })
       
       if (error) {
@@ -183,10 +194,20 @@ export default function Game() {
     if (!user) return;
     const { id, user_metadata } = user;
     const name = user_metadata?.full_name || user_metadata?.name || null;
+    const avatar_url = user_metadata?.avatar_url || null;
+    
     if (!name) return;
 
-    // sync name to users table
-    supabase.from('users').upsert({ id, name });
+    // sync user data to users table
+    supabase.from('users').upsert({ 
+      id, 
+      name,
+      avatar_url 
+    }).then(({ error }) => {
+      if (error) {
+        console.error('Error syncing user data:', error);
+      }
+    });
   }, [user]);
 
   if (!user) {
