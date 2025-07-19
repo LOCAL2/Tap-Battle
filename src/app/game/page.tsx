@@ -1,17 +1,18 @@
 'use client'
 
 import { useAuth } from '@/components/AuthProvider'
-import LoginPage from '@/components/LoginPage'
+import Game from '@/components/Game'
+import Scoreboard from '@/components/Scoreboard'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-export default function Home() {
+export default function GamePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/game')
+    if (!loading && !user) {
+      router.push('/')
     }
   }, [user, loading, router])
 
@@ -23,9 +24,14 @@ export default function Home() {
     )
   }
 
-  if (user) {
+  if (!user) {
     return null
   }
 
-  return <LoginPage />
-}
+  return (
+    <div className="relative">
+      <Game />
+      <Scoreboard />
+    </div>
+  )
+} 
