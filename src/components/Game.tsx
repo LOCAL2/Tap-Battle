@@ -36,7 +36,7 @@ export default function Game() {
       
       const { data: scoreData, error } = await supabase
         .from('scores')
-        .select('score')
+        .select('score, updated_at')
         .eq('user_id', user.id)
         .single()
 
@@ -44,6 +44,7 @@ export default function Game() {
         console.error('Error loading user score:', error)
         setScore(0)
       } else {
+        console.log('Loaded score data:', scoreData)
         setScore(scoreData.score || 0)
       }
     } catch (error) {
@@ -128,15 +129,27 @@ export default function Game() {
 
     // Update database with current timestamp
     try {
-      await supabase
+      console.log('Updating score in database:', {
+        user_id: user.id,
+        score: newScore,
+        updated_at: new Date().toISOString()
+      })
+      
+      const { data, error } = await supabase
         .from('scores')
         .upsert({
           user_id: user.id,
-          score: newScore,
-          updated_at: new Date().toISOString() // Update timestamp when user clicks
+          score: newScore
+          // updated_at จะถูกอัพเดทอัตโนมัติโดย trigger
         }, {
           onConflict: 'user_id'
         })
+      
+      if (error) {
+        console.error('Supabase error updating score:', error)
+      } else {
+        console.log('Score updated successfully:', data)
+      }
     } catch (error) {
       console.error('Error updating score:', error)
     }
