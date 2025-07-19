@@ -324,7 +324,7 @@ export default function Scoreboard() {
           }`}>
             {/* Top Players Section */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center justify-center gap-2 mb-3">
                 <Medal className="text-yellow-400" size={16} />
                 <h4 className="text-white font-semibold text-sm">Top Players</h4>
               </div>
