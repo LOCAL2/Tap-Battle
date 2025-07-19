@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Trophy, ChevronUp, ChevronDown, Zap, Activity, Medal } from 'lucide-react'
 import Image from 'next/image'
 import { useAuth } from '@/components/AuthProvider'
@@ -29,10 +29,10 @@ interface ActivePlayer {
   score_increase: number
 }
 
-interface UserData {
-  name: string
-  avatar_url: string | null
-}
+// interface UserData {
+//   name: string
+//   avatar_url: string | null
+// }
 
 export default function Scoreboard() {
   const { user } = useAuth()
@@ -108,7 +108,7 @@ export default function Scoreboard() {
         })
         
         // Check for score increases and trigger animations
-        const newScores = formattedScores.map(score => {
+        formattedScores.map(score => {
           const previousScore = previousScoresRef.current[score.user_id] || 0
           const scoreIncrease = score.score - previousScore
           

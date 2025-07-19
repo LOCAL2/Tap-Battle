@@ -1,8 +1,7 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(_req: NextRequest) {
+export async function middleware(req: NextRequest) {
   // Temporarily disabled middleware to fix black screen issue
   // const res = NextResponse.next()
   // const supabase = createMiddlewareClient({ req, res })

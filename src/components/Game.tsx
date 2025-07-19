@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from './AuthProvider'
 import { supabase } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Zap, LogOut, Crown } from 'lucide-react'
+import { Zap, LogOut } from 'lucide-react'
 import Image from 'next/image'
 
 interface GameTarget {
@@ -207,7 +207,6 @@ export default function Game() {
               <h2 className="text-white font-semibold">
                 {user.user_metadata?.full_name || user.user_metadata?.name || 'Player'}
               </h2>
-              <p className="text-white/60 text-sm">แย่งกันกด targets!</p>
             </div>
           </div>
           
